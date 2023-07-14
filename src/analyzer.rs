@@ -98,7 +98,7 @@ impl MoveGenerator {
         if square.y == 1 && *col == Color::White || square.y == 6 && *col == Color::Black {
             move_to.y = (move_to.y as i32 + move_dir) as usize;
             if board.get_square(&move_to.to_string()).piece.is_none() {
-                moves.push(Move::from_indices(square, &move_to, MoveType::Normal));
+                moves.push(Move::from_indices(square, &move_to, MoveType::PawnDouble));
             }
         }
 
@@ -128,6 +128,24 @@ impl MoveGenerator {
                 moves.push(Move::from_indices(square, &move_to, MoveType::Capture));
             }
         }
+
+        if board.en_passant_square.is_some() {
+            let en_passant_square = board.en_passant_square.unwrap();
+            if (square.x == en_passant_square.0 - 1) || (square.x == en_passant_square.0 + 1) {
+                let allowed_y = match col {
+                    Color::White => 4,
+                    Color::Black => 3,
+                };
+
+                if square.y == allowed_y {
+                    let mut move_to = square.clone();
+                    move_to.x = en_passant_square.0;
+                    move_to.y = en_passant_square.1;
+                    moves.push(Move::from_indices(square, &move_to, MoveType::EnPassant));
+                }
+            }
+        }
+
         moves
     }
 

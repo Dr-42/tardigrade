@@ -50,6 +50,16 @@ impl Square {
 
 pub struct Board {
     pub board: [[Square; 8]; 8],
+    pub to_move: Color,
+    pub halfmove_clock: u8,
+    pub fullmove_number: u8,
+
+    pub white_king_side_castle: bool,
+    pub white_queen_side_castle: bool,
+    pub black_king_side_castle: bool,
+    pub black_queen_side_castle: bool,
+
+    pub en_passant_square: Option<(usize, usize)>,
 }
 
 impl Board {
@@ -67,7 +77,90 @@ impl Board {
             }
         }
 
-        Board { board: board }
+        let board = Board {
+            board: board,
+            to_move: Color::White,
+            halfmove_clock: 0,
+            fullmove_number: 1,
+
+            white_king_side_castle: true,
+            white_queen_side_castle: true,
+            black_king_side_castle: true,
+            black_queen_side_castle: true,
+
+            en_passant_square: None,
+        };
+
+        board
+    }
+
+    pub fn from_fen(fen: &str) -> Board {
+        let mut board = Board::new();
+        let mut fen = fen.split_whitespace();
+        let board_str = fen.next().unwrap();
+        let to_move = fen.next().unwrap();
+        let castle = fen.next().unwrap();
+        let en_passant = fen.next().unwrap();
+        let halfmove_clock = fen.next().unwrap();
+        let fullmove_number = fen.next().unwrap();
+        let board_str: Vec<&str> = board_str.split("/").collect();
+
+        for row in 0..=7 {
+            let mut col = 0;
+            for c in board_str[7 - row].chars() {
+                if c.is_digit(10) {
+                    col += c.to_digit(10).unwrap() as usize;
+                } else {
+                    let piece = match c {
+                        'p' => Some((Piece::Pawn, Color::Black)),
+                        'n' => Some((Piece::Knight, Color::Black)),
+                        'b' => Some((Piece::Bishop, Color::Black)),
+                        'r' => Some((Piece::Rook, Color::Black)),
+                        'q' => Some((Piece::Queen, Color::Black)),
+                        'k' => Some((Piece::King, Color::Black)),
+                        'P' => Some((Piece::Pawn, Color::White)),
+                        'N' => Some((Piece::Knight, Color::White)),
+                        'B' => Some((Piece::Bishop, Color::White)),
+                        'R' => Some((Piece::Rook, Color::White)),
+                        'Q' => Some((Piece::Queen, Color::White)),
+                        'K' => Some((Piece::King, Color::White)),
+                        _ => None,
+                    };
+                    board.set_piece((row, col), piece);
+                    col += 1;
+                }
+            }
+        }
+
+        if to_move == "w" {
+            board.to_move = Color::White;
+        } else {
+            board.to_move = Color::Black;
+        }
+
+        board.black_king_side_castle = false;
+        board.black_queen_side_castle = false;
+        board.white_king_side_castle = false;
+        board.white_queen_side_castle = false;
+
+        for c in castle.chars() {
+            match c {
+                'K' => board.white_king_side_castle = true,
+                'Q' => board.white_queen_side_castle = true,
+                'k' => board.black_king_side_castle = true,
+                'q' => board.black_queen_side_castle = true,
+                _ => (),
+            }
+        }
+
+        if en_passant != "-" {
+            board.en_passant_square = Some(en_passant.to_board_indices());
+        }
+
+        board.halfmove_clock = halfmove_clock.parse::<u8>().unwrap();
+        board.fullmove_number = fullmove_number.parse::<u8>().unwrap();
+
+        board
     }
 
     pub fn print(&self) {
@@ -105,6 +198,18 @@ impl Board {
             println!();
         }
         println!();
+
+        println!(
+            "Turn: {:?}, Enpassant: {:?}, HMC: {} FMC: {}",
+            self.to_move, self.en_passant_square, self.halfmove_clock, self.fullmove_number
+        );
+        println!(
+            "WKC: {}, WQC: {}, BKC: {}, BQC:{}",
+            self.white_king_side_castle,
+            self.white_queen_side_castle,
+            self.black_king_side_castle,
+            self.black_queen_side_castle
+        );
     }
 
     pub fn set_piece(&mut self, (x, y): (usize, usize), piece: Option<(Piece, Color)>) {
@@ -125,13 +230,32 @@ impl Board {
         */
 
         let (from, to) = mov.get_indices();
+        if mov.mov_type == MoveType::EnPassant {
+            let (x, y) = self.en_passant_square.unwrap();
+            if y == 5 {
+                self.set_piece((x, 4), None);
+            } else {
+                self.set_piece((x, 2), None);
+            }
+        }
+        if mov.mov_type == MoveType::PawnDouble {
+            let dx: i32;
+            if self.to_move == Color::White {
+                dx = 1;
+            } else {
+                dx = -1;
+            }
+            self.en_passant_square = Some((to.0, (to.1 as i32 - dx) as usize));
+        } else {
+            self.en_passant_square = None;
+        }
         self.set_piece(to, self.get_square(&mov.from).piece);
         self.set_piece(from, None);
     }
 
     pub fn get_square(&self, square: &str) -> Square {
         let (x, y) = square.to_board_indices();
-        self.board[x][y]
+        self.board[y][x]
     }
 }
 
@@ -155,15 +279,16 @@ impl ToBoardIndices for &str {
         if self.len() != 2 {
             panic!("Invalid square!");
         }
-        let y = self.chars().nth(0).unwrap() as usize - 97;
-        let x = self.chars().nth(1).unwrap() as usize - 49;
+        let x = self.chars().nth(0).unwrap() as usize - 97;
+        let y = self.chars().nth(1).unwrap() as usize - 49;
         (x, y)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum MoveType {
     Normal,
+    PawnDouble,
     Capture,
     EnPassant,
     Castle,
@@ -175,6 +300,7 @@ impl std::fmt::Display for MoveType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let to_print: &str = match self {
             MoveType::Normal => "Normal",
+            MoveType::PawnDouble => "PawnDouble",
             MoveType::Capture => "Capture",
             MoveType::EnPassant => "EnPassant",
             MoveType::Castle => "Castle",
