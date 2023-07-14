@@ -1,4 +1,7 @@
-use tardigrade::board::{Board, Color, Piece};
+use tardigrade::{
+    analyzer::MoveGenerator,
+    board::{Board, Color, Move, Piece},
+};
 fn main() {
     let mut board = Board::new();
     board.place_piece("a1", Some((Piece::Rook, Color::White)));
@@ -37,7 +40,20 @@ fn main() {
     board.place_piece("g7", Some((Piece::Pawn, Color::Black)));
     board.place_piece("h7", Some((Piece::Pawn, Color::Black)));
     board.print();
-
-    board.move_piece("e2", "e4");
     board.print();
+
+    let mut all_moves: Vec<Move> = Vec::new();
+    for row in board.board {
+        for sq in row {
+            let mut moves = MoveGenerator::gen_pseudo_moves(&sq, &board);
+            all_moves.append(&mut moves);
+        }
+    }
+
+    println!("All moves: {}", all_moves.len());
+    for (i, mov) in all_moves.iter().enumerate() {
+        println!("{}: {:?}", i, mov);
+    }
+
+    //board.print();
 }
