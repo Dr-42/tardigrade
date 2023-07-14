@@ -62,7 +62,7 @@ impl MoveGenerator {
         if square.piece.is_some() {
             let piece = square.piece.unwrap().0;
             let pseudo_moves = match piece {
-                Piece::Pawn => vec![], //MoveGenerator::gen_pawn_pseudo_moves(&square, board),
+                Piece::Pawn => MoveGenerator::gen_pawn_pseudo_moves(&square, board),
                 Piece::Knight => MoveGenerator::gen_knight_pseudo_moves(&square, board),
                 Piece::Bishop => MoveGenerator::gen_bishop_pseudo_moves(&square, board),
                 Piece::Rook => MoveGenerator::gen_rook_pseudo_moves(&square, board),
@@ -88,7 +88,7 @@ impl MoveGenerator {
 
         let mut move_to = square.clone();
         let new_y = move_to.y as i32 + move_dir;
-        if new_y < 8 || new_y >= 0 {
+        if new_y < 8 && new_y >= 0 {
             move_to.y = new_y as usize;
             if board.get_square(&move_to.to_string()).piece.is_none() {
                 moves.push(Move::from_indices(square, &move_to));
@@ -102,13 +102,13 @@ impl MoveGenerator {
             }
         }
 
-        move_to = square.clone();
+        let mut move_to = square.clone();
         let new_y = move_to.y as i32 + move_dir;
         let new_x = move_to.x as i32 + 1;
 
-        if new_x < 8 || new_y < 8 || new_x >= 0 || new_y >= 0 {
-            move_to.y = (move_to.y as i32 + move_dir) as usize;
-            move_to.x = (move_to.x as i32 - 1) as usize;
+        if new_x < 8 && new_y < 8 && new_x >= 0 && new_y >= 0 {
+            move_to.y = new_y as usize;
+            move_to.x = new_x as usize;
             if board.get_square(&move_to.to_string()).piece.is_some()
                 && board.get_square(&move_to.to_string()).piece.unwrap().1 != *col
             {
@@ -116,12 +116,12 @@ impl MoveGenerator {
             }
         }
 
-        move_to = square.clone();
+        let mut move_to = square.clone();
         let new_y = move_to.y as i32 + move_dir;
         let new_x = move_to.x as i32 - 1;
-        if new_x < 8 || new_y < 8 || new_x >= 0 || new_y >= 0 {
-            move_to.y = (move_to.y as i32 + move_dir) as usize;
-            move_to.x = (move_to.x as i32 - 1) as usize;
+        if new_x < 8 && new_y < 8 && new_x >= 0 && new_y >= 0 {
+            move_to.y = new_y as usize;
+            move_to.x = new_x as usize;
             if board.get_square(&move_to.to_string()).piece.is_some()
                 && board.get_square(&move_to.to_string()).piece.unwrap().1 != *col
             {

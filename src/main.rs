@@ -40,20 +40,24 @@ fn main() {
     board.place_piece("g7", Some((Piece::Pawn, Color::Black)));
     board.place_piece("h7", Some((Piece::Pawn, Color::Black)));
     board.print();
-    board.print();
 
     let mut all_moves: Vec<Move> = Vec::new();
     for row in board.board {
         for sq in row {
+            if sq.piece.is_none() {
+                continue;
+            }
+
+            if sq.piece.unwrap().1 == Color::Black {
+                continue;
+            }
             let mut moves = MoveGenerator::gen_pseudo_moves(&sq, &board);
             all_moves.append(&mut moves);
         }
     }
 
     println!("All moves: {}", all_moves.len());
-    for (i, mov) in all_moves.iter().enumerate() {
-        println!("{}: {:?}", i, mov);
+    for mov in all_moves.iter() {
+        mov.print();
     }
-
-    //board.print();
 }
