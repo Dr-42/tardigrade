@@ -285,6 +285,81 @@ impl MoveGenerator {
             }
         }
 
+        if square.y == 0 && square.x == 4 && *col == Color::White {
+            if board.white_king_side_castle {
+                let mut move_to = square.clone();
+                move_to.x = 6;
+
+                if board.get_square("f1").piece.is_none()
+                    && board.get_square("g1").piece.is_none()
+                    && board.get_square("h1").piece.is_some()
+                    && board.get_square("h1").piece.unwrap().0 == Piece::Rook
+                    && board.get_square("h1").piece.unwrap().1 == Color::White
+                {
+                    moves.push(Move::from_indices(
+                        square,
+                        &move_to,
+                        MoveType::CastleKingSide,
+                    ));
+                }
+            }
+            if board.white_queen_side_castle {
+                let mut move_to = square.clone();
+                move_to.x = 2;
+
+                if board.get_square("b1").piece.is_none()
+                    && board.get_square("c1").piece.is_none()
+                    && board.get_square("d1").piece.is_none()
+                    && board.get_square("a1").piece.is_some()
+                    && board.get_square("a1").piece.unwrap().0 == Piece::Rook
+                    && board.get_square("a1").piece.unwrap().1 == Color::White
+                {
+                    moves.push(Move::from_indices(
+                        square,
+                        &move_to,
+                        MoveType::CastleQueenSide,
+                    ));
+                }
+            }
+        }
+
+        if square.y == 7 && square.x == 4 && *col == Color::Black {
+            if board.black_king_side_castle {
+                let mut move_to = square.clone();
+                move_to.x = 6;
+
+                if board.get_square("f8").piece.is_none()
+                    && board.get_square("g8").piece.is_none()
+                    && board.get_square("h8").piece.is_some()
+                    && board.get_square("h8").piece.unwrap().0 == Piece::Rook
+                    && board.get_square("h8").piece.unwrap().1 == Color::Black
+                {
+                    moves.push(Move::from_indices(
+                        square,
+                        &move_to,
+                        MoveType::CastleKingSide,
+                    ));
+                }
+            }
+            if board.black_queen_side_castle {
+                let mut move_to = square.clone();
+                move_to.x = 6;
+
+                if board.get_square("b8").piece.is_none()
+                    && board.get_square("c8").piece.is_none()
+                    && board.get_square("d8").piece.is_none()
+                    && board.get_square("a8").piece.is_some()
+                    && board.get_square("a8").piece.unwrap().0 == Piece::Rook
+                    && board.get_square("a8").piece.unwrap().1 == Color::Black
+                {
+                    moves.push(Move::from_indices(
+                        square,
+                        &move_to,
+                        MoveType::CastleQueenSide,
+                    ));
+                }
+            }
+        }
         moves
     }
 
