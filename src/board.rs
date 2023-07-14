@@ -162,21 +162,47 @@ impl ToBoardIndices for &str {
 }
 
 #[derive(Debug)]
+pub enum MoveType {
+    Normal,
+    Capture,
+    EnPassant,
+    Castle,
+    Promotion,
+    PromotionCapture,
+}
+
+impl std::fmt::Display for MoveType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let to_print: &str = match self {
+            MoveType::Normal => "Normal",
+            MoveType::Capture => "Capture",
+            MoveType::EnPassant => "EnPassant",
+            MoveType::Castle => "Castle",
+            MoveType::Promotion => "Promotion",
+            MoveType::PromotionCapture => "PromotionCapture",
+        };
+        write!(f, "{}", to_print)
+    }
+}
+
+#[derive(Debug)]
 pub struct Move {
     pub from: String,
     pub to: String,
+    pub mov_type: MoveType,
 }
 
 impl Move {
-    pub fn new(from: &str, to: &str) -> Move {
+    pub fn new(from: &str, to: &str, typ: MoveType) -> Move {
         Move {
             from: from.to_string(),
             to: to.to_string(),
+            mov_type: typ,
         }
     }
 
     pub fn print(&self) {
-        println!("{} -> {}", self.from, self.to);
+        println!("{} -> {} ({})", self.from, self.to, self.mov_type);
     }
 
     pub fn get_indices(&self) -> ((usize, usize), (usize, usize)) {
@@ -185,13 +211,13 @@ impl Move {
         ((from_x, from_y), (to_x, to_y))
     }
 
-    pub fn from_indices(from: &Square, to: &Square) -> Move {
+    pub fn from_indices(from: &Square, to: &Square, typ: MoveType) -> Move {
         let from = format!(
             "{}{}",
             (from.x + 97) as u8 as char,
             (from.y + 49) as u8 as char
         );
         let to = format!("{}{}", (to.x + 97) as u8 as char, (to.y + 49) as u8 as char);
-        Move::new(&from, &to)
+        Move::new(&from, &to, typ)
     }
 }

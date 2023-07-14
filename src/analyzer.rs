@@ -1,4 +1,4 @@
-use crate::board::{Board, Color, Move, Piece, Square};
+use crate::board::{Board, Color, Move, MoveType, Piece, Square};
 
 pub struct Analyzer {}
 impl Analyzer {
@@ -91,14 +91,14 @@ impl MoveGenerator {
         if new_y < 8 && new_y >= 0 {
             move_to.y = new_y as usize;
             if board.get_square(&move_to.to_string()).piece.is_none() {
-                moves.push(Move::from_indices(square, &move_to));
+                moves.push(Move::from_indices(square, &move_to, MoveType::Normal));
             }
         }
 
         if square.y == 1 && *col == Color::White || square.y == 6 && *col == Color::Black {
             move_to.y = (move_to.y as i32 + move_dir) as usize;
             if board.get_square(&move_to.to_string()).piece.is_none() {
-                moves.push(Move::from_indices(square, &move_to));
+                moves.push(Move::from_indices(square, &move_to, MoveType::Normal));
             }
         }
 
@@ -112,7 +112,7 @@ impl MoveGenerator {
             if board.get_square(&move_to.to_string()).piece.is_some()
                 && board.get_square(&move_to.to_string()).piece.unwrap().1 != *col
             {
-                moves.push(Move::from_indices(square, &move_to));
+                moves.push(Move::from_indices(square, &move_to, MoveType::Capture));
             }
         }
 
@@ -125,7 +125,7 @@ impl MoveGenerator {
             if board.get_square(&move_to.to_string()).piece.is_some()
                 && board.get_square(&move_to.to_string()).piece.unwrap().1 != *col
             {
-                moves.push(Move::from_indices(square, &move_to));
+                moves.push(Move::from_indices(square, &move_to, MoveType::Capture));
             }
         }
         moves
@@ -152,15 +152,21 @@ impl MoveGenerator {
                     move_to.y = new_y as usize;
 
                     let mut valid: bool;
+                    let mut captured = false;
                     valid = board.get_square(&move_to.to_string()).piece.is_none();
                     if !valid {
                         if board.get_square(&move_to.to_string()).piece.unwrap().1 != *col {
                             valid = true;
+                            captured = true;
                         }
                     }
 
                     if valid {
-                        moves.push(Move::from_indices(square, &move_to));
+                        if captured {
+                            moves.push(Move::from_indices(square, &move_to, MoveType::Capture));
+                        } else {
+                            moves.push(Move::from_indices(square, &move_to, MoveType::Normal));
+                        }
                     }
                 }
             }
@@ -230,15 +236,21 @@ impl MoveGenerator {
                     move_to.y = new_y as usize;
 
                     let mut valid: bool;
+                    let mut captured = false;
                     valid = board.get_square(&move_to.to_string()).piece.is_none();
                     if !valid {
                         if board.get_square(&move_to.to_string()).piece.unwrap().1 != *col {
                             valid = true;
+                            captured = true;
                         }
                     }
 
                     if valid {
-                        moves.push(Move::from_indices(square, &move_to));
+                        if captured {
+                            moves.push(Move::from_indices(square, &move_to, MoveType::Capture));
+                        } else {
+                            moves.push(Move::from_indices(square, &move_to, MoveType::Normal));
+                        }
                     }
                 }
             }
@@ -265,15 +277,21 @@ impl MoveGenerator {
                 move_to.y = new_y as usize;
 
                 let mut valid: bool;
+                let mut captured = false;
                 valid = board.get_square(&move_to.to_string()).piece.is_none();
                 if !valid {
                     if board.get_square(&move_to.to_string()).piece.unwrap().1 != *col {
                         valid = true;
+                        captured = true;
                     }
                 }
 
                 if valid {
-                    moves.push(Move::from_indices(square, &move_to));
+                    if captured {
+                        moves.push(Move::from_indices(square, &move_to, MoveType::Capture));
+                    } else {
+                        moves.push(Move::from_indices(square, &move_to, MoveType::Normal));
+                    }
                 }
 
                 if board.get_square(&move_to.to_string()).piece.is_some() {
