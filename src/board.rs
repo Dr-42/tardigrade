@@ -10,6 +10,21 @@ pub enum Piece {
     King,
 }
 
+impl Piece {
+    pub fn iter() -> impl Iterator<Item = Piece> {
+        [
+            Piece::Pawn,
+            Piece::Knight,
+            Piece::Bishop,
+            Piece::Rook,
+            Piece::Queen,
+            Piece::King,
+        ]
+        .iter()
+        .copied()
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Color {
     White,
@@ -316,6 +331,7 @@ pub struct Move {
     pub from: String,
     pub to: String,
     pub mov_type: MoveType,
+    pub promotion: Option<Piece>,
 }
 
 impl Move {
@@ -324,11 +340,16 @@ impl Move {
             from: from.to_string(),
             to: to.to_string(),
             mov_type: typ,
+            promotion: None,
         }
     }
 
     pub fn print(&self) {
-        println!("{} -> {} ({})", self.from, self.to, self.mov_type);
+        print!("{} -> {} ({})", self.from, self.to, self.mov_type);
+        if self.promotion.is_some() {
+            print!(" ({:?})", self.promotion.unwrap());
+        }
+        println!();
     }
 
     pub fn get_indices(&self) -> ((usize, usize), (usize, usize)) {

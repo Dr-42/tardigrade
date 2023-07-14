@@ -91,7 +91,18 @@ impl MoveGenerator {
         if new_y < 8 && new_y >= 0 {
             move_to.y = new_y as usize;
             if board.get_square(&move_to.to_string()).piece.is_none() {
-                moves.push(Move::from_indices(square, &move_to, MoveType::Normal));
+                if (new_y == 7 && *col == Color::White) || (new_y == 0 && *col == Color::Black) {
+                    for ty in Piece::iter() {
+                        if ty == Piece::Pawn {
+                            continue;
+                        }
+                        let mut mv = Move::from_indices(square, &move_to, MoveType::Promotion);
+                        mv.promotion = Some(ty);
+                        moves.push(mv);
+                    }
+                } else {
+                    moves.push(Move::from_indices(square, &move_to, MoveType::Normal));
+                }
             }
         }
 
