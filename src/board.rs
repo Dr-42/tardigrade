@@ -306,7 +306,8 @@ pub enum MoveType {
     PawnDouble,
     Capture,
     EnPassant,
-    Castle,
+    CastleKingSide,
+    CastleQueenSide,
     Promotion,
     PromotionCapture,
 }
@@ -318,7 +319,8 @@ impl std::fmt::Display for MoveType {
             MoveType::PawnDouble => "PawnDouble",
             MoveType::Capture => "Capture",
             MoveType::EnPassant => "EnPassant",
-            MoveType::Castle => "Castle",
+            MoveType::CastleKingSide => "O-O",
+            MoveType::CastleQueenSide => "O-O-O",
             MoveType::Promotion => "Promotion",
             MoveType::PromotionCapture => "PromotionCapture",
         };

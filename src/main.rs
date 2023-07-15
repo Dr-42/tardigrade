@@ -3,7 +3,8 @@ use tardigrade::{
     board::{Board, Color, Move},
 };
 fn main() {
-    let board = Board::from_fen("rnbqkbnr/ppp2ppp/3p4/4pP2/8/8/PPPPP1PP/RNBQKBNR w KQkq e6 0 3");
+    let board =
+        Board::from_fen("r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4");
     board.print();
 
     let mut all_moves: Vec<Move> = Vec::new();
