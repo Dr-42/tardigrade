@@ -1,3 +1,4 @@
+use crate::analyzer::Analyzer;
 use colored::Colorize;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -63,6 +64,7 @@ impl Square {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Board {
     pub board: [[Square; 8]; 8],
     pub to_move: Color,
@@ -237,13 +239,13 @@ impl Board {
         self.set_piece(indices, piece);
     }
 
-    pub fn move_piece(&mut self, mov: &Move) {
-        /*
-        if !Analyzer::check_legal(mov, &self) {
-            println!("Illegal move!");
-            return;
+    pub fn move_piece(&mut self, mov: &Move, _check_legal: bool) {
+        if _check_legal {
+            if !Analyzer::check_legal(mov, &self) {
+                println!("Illegal move!");
+                return;
+            }
         }
-        */
 
         if mov.mov_type == MoveType::CastleKingSide || mov.mov_type == MoveType::CastleQueenSide {
             if self.to_move == Color::White {
@@ -458,6 +460,10 @@ impl Move {
             print!(" ({:?})", self.promotion.unwrap());
         }
         println!();
+    }
+
+    pub fn to_string(&self) -> String {
+        format!("{}{}", self.from, self.to)
     }
 
     pub fn get_indices(&self) -> ((usize, usize), (usize, usize)) {

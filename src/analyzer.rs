@@ -8,55 +8,67 @@ impl Analyzer {
             return false;
         }
 
-        let piece = piece.unwrap();
-        let piece_type = piece.0;
-        let piece_color = piece.1;
+        let mut cl_board = board.clone();
+        cl_board.move_piece(mov, false);
 
-        let to_piece = board.get_square(&mov.to).piece;
-        if to_piece.is_some() && to_piece.unwrap().1 == piece_color {
-            return false;
+        let mut all_moves = Vec::new();
+        for row in cl_board.board {
+            for sq in row {
+                if sq.piece.is_none() {
+                    continue;
+                }
+
+                if sq.piece.unwrap().1 == board.to_move {
+                    continue;
+                }
+                let mut moves = MoveGenerator::gen_pseudo_moves(&sq, &cl_board);
+                all_moves.append(&mut moves);
+            }
         }
 
-        let result = match piece_type {
-            Piece::Pawn => Analyzer::check_pawn_legal(mov, &piece_color, board),
-            Piece::Knight => Analyzer::check_knight_legal(mov, &piece_color, board),
-            Piece::Bishop => Analyzer::check_bishop_legal(mov, &piece_color, board),
-            Piece::Rook => Analyzer::check_rook_legal(mov, &piece_color, board),
-            Piece::Queen => Analyzer::check_queen_legal(mov, &piece_color, board),
-            Piece::King => Analyzer::check_king_legal(mov, &piece_color, board),
-        };
-        return result;
-    }
+        for m in all_moves {
+            if m.mov_type == MoveType::Capture {
+                if cl_board.get_square(&m.to).piece.is_some() {
+                    if cl_board.get_square(&m.to).piece.unwrap().0 == Piece::King {
+                        return false;
+                    }
+                }
+            }
+        }
 
-    #[allow(unused_variables)]
-    fn check_pawn_legal(mov: &Move, col: &Color, board: &Board) -> bool {
-        todo!();
-    }
-    #[allow(unused_variables)]
-    fn check_knight_legal(mov: &Move, col: &Color, board: &Board) -> bool {
-        todo!();
-    }
-    #[allow(unused_variables)]
-    fn check_bishop_legal(mov: &Move, col: &Color, board: &Board) -> bool {
-        todo!();
-    }
-    #[allow(unused_variables)]
-    fn check_rook_legal(mov: &Move, col: &Color, board: &Board) -> bool {
-        todo!();
-    }
-    #[allow(unused_variables)]
-    fn check_queen_legal(mov: &Move, col: &Color, board: &Board) -> bool {
-        todo!();
-    }
-    #[allow(unused_variables)]
-    fn check_king_legal(mov: &Move, col: &Color, board: &Board) -> bool {
-        todo!();
+        return true;
     }
 }
 
 pub struct MoveGenerator {}
 
 impl MoveGenerator {
+    pub fn gen_legal_moves(board: &Board) -> Vec<Move> {
+        let mut all_moves = Vec::new();
+        for row in board.board {
+            for sq in row {
+                if sq.piece.is_none() {
+                    continue;
+                }
+
+                if sq.piece.unwrap().1 != board.to_move {
+                    continue;
+                }
+                let mut moves = MoveGenerator::gen_pseudo_moves(&sq, board);
+                all_moves.append(&mut moves);
+            }
+        }
+
+        let mut legal_moves = Vec::new();
+        for m in all_moves {
+            if Analyzer::check_legal(&m, board) {
+                legal_moves.push(m);
+            }
+        }
+
+        legal_moves
+    }
+
     pub fn gen_pseudo_moves(square: &Square, board: &Board) -> Vec<Move> {
         let mut moves = Vec::new();
         if square.piece.is_some() {
@@ -108,7 +120,11 @@ impl MoveGenerator {
 
         if square.y == 1 && *col == Color::White || square.y == 6 && *col == Color::Black {
             move_to.y = (move_to.y as i32 + move_dir) as usize;
-            if board.get_square(&move_to.to_string()).piece.is_none() {
+            let mut move_to1 = move_to.clone();
+            move_to1.y = (move_to1.y as i32 - move_dir) as usize;
+            if board.get_square(&move_to.to_string()).piece.is_none()
+                && board.get_square(&move_to1.to_string()).piece.is_none()
+            {
                 moves.push(Move::from_indices(square, &move_to, MoveType::PawnDouble));
             }
         }
@@ -408,5 +424,81 @@ impl MoveGenerator {
             }
         }
         moves
+    }
+}
+
+pub struct Evaluator {}
+
+#[derive(Debug)]
+pub struct PerftResult {
+    pub nodes: u64,
+    pub captures: u64,
+    pub en_passants: u64,
+    pub castles: u64,
+    pub promotions: u64,
+}
+
+impl Evaluator {
+    pub fn perft(board: &Board, depth: u64, print: bool) -> PerftResult {
+        let mut nodes = 0;
+        let mut captures = 0;
+        let mut en_passants = 0;
+        let mut castles = 0;
+        let mut promotions = 0;
+
+        if depth == 0 {
+            return PerftResult {
+                nodes: 1,
+                captures: 0,
+                en_passants: 0,
+                castles: 0,
+                promotions: 0,
+            };
+        }
+
+        let mut perft_prints = Vec::new();
+        let moves = MoveGenerator::gen_legal_moves(board);
+        for m in moves {
+            let mut cl_board = board.clone();
+            cl_board.move_piece(&m, true);
+            let res = Evaluator::perft(&cl_board, depth - 1, false);
+
+            if m.mov_type == MoveType::Capture {
+                captures += res.nodes;
+            } else if m.mov_type == MoveType::EnPassant {
+                en_passants += res.nodes;
+            } else if m.mov_type == MoveType::CastleKingSide
+                || m.mov_type == MoveType::CastleQueenSide
+            {
+                castles += res.nodes;
+            } else if m.mov_type == MoveType::Promotion {
+                promotions += res.nodes;
+            }
+
+            nodes += res.nodes;
+            captures += res.captures;
+            en_passants += res.en_passants;
+            castles += res.castles;
+            promotions += res.promotions;
+
+            if print {
+                perft_prints.push(format!("{}: {}", m.to_string(), res.nodes));
+            }
+        }
+
+        perft_prints.sort();
+        for p in &perft_prints {
+            println!("{}", p);
+        }
+        if print {
+            println!("Nodes: {}", nodes);
+        }
+        PerftResult {
+            nodes,
+            captures,
+            en_passants,
+            castles,
+            promotions,
+        }
     }
 }
