@@ -285,11 +285,11 @@ impl Board {
 
         let (from, to) = mov.get_indices();
         if mov.mov_type == MoveType::EnPassant {
-            let (x, y) = self.en_passant_square.unwrap();
+            let (y, x) = self.en_passant_square.unwrap();
             if y == 5 {
-                self.set_piece((x, 4), None);
+                self.set_piece((4, x), None);
             } else {
-                self.set_piece((x, 2), None);
+                self.set_piece((3, x), None);
             }
         }
         if mov.mov_type == MoveType::PawnDouble {
