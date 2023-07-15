@@ -299,7 +299,7 @@ impl Board {
             } else {
                 dx = -1;
             }
-            self.en_passant_square = Some((to.0, (to.1 as i32 - dx) as usize));
+            self.en_passant_square = Some(((from.0 as i32 + dx) as usize, from.1 as usize));
         } else {
             self.en_passant_square = None;
         }
@@ -481,4 +481,8 @@ impl Move {
         let to = format!("{}{}", (to.x + 97) as u8 as char, (to.y + 49) as u8 as char);
         Move::new(&from, &to, typ)
     }
+}
+
+pub fn from_indices(y: usize, x: usize) -> String {
+    format!("{}{}", (x + 97) as u8 as char, (y + 49) as u8 as char)
 }

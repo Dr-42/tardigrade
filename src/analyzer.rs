@@ -11,6 +11,10 @@ impl Analyzer {
         let mut cl_board = board.clone();
         cl_board.move_piece(mov, false);
 
+        if Analyzer::is_king_in_check(&cl_board) {
+            return false;
+        }
+
         let mut all_moves = Vec::new();
         for row in cl_board.board {
             for sq in row {
@@ -37,6 +41,35 @@ impl Analyzer {
         }
 
         return true;
+    }
+
+    pub fn is_king_in_check(board: &Board) -> bool {
+        let mut all_moves = Vec::new();
+        for row in board.board {
+            for sq in row {
+                if sq.piece.is_none() {
+                    continue;
+                }
+
+                if sq.piece.unwrap().1 != board.to_move {
+                    continue;
+                }
+                let mut moves = MoveGenerator::gen_pseudo_moves(&sq, board);
+                all_moves.append(&mut moves);
+            }
+        }
+
+        for m in all_moves {
+            if m.mov_type == MoveType::Capture {
+                if board.get_square(&m.to).piece.is_some() {
+                    if board.get_square(&m.to).piece.unwrap().0 == Piece::King {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 }
 
@@ -158,7 +191,18 @@ impl MoveGenerator {
 
         if board.en_passant_square.is_some() {
             let en_passant_square = board.en_passant_square.unwrap();
-            if (square.x == en_passant_square.0 - 1) || (square.x == en_passant_square.0 + 1) {
+            let en_passant_square = (en_passant_square.1, en_passant_square.0);
+            let en_pass_allowed: bool;
+            if en_passant_square.0 == 0 {
+                en_pass_allowed = square.x == en_passant_square.0 + 1;
+            } else if en_passant_square.0 == 7 {
+                en_pass_allowed = square.x == en_passant_square.0 - 1;
+            } else {
+                en_pass_allowed =
+                    (square.x == en_passant_square.0 - 1) || (square.x == en_passant_square.0 + 1);
+            }
+
+            if en_pass_allowed {
                 let allowed_y = match col {
                     Color::White => 4,
                     Color::Black => 3,
