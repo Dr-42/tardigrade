@@ -40,6 +40,123 @@ impl Analyzer {
             }
         }
 
+        if mov.mov_type == MoveType::CastleKingSide {
+            let mut cl_board = board.clone();
+            if board.to_move == Color::White {
+                cl_board.place_piece("f1", Some((Piece::King, Color::White)));
+                cl_board.place_piece("g1", Some((Piece::King, Color::White)));
+                let mut all_moves = Vec::new();
+                for row in cl_board.board {
+                    for sq in row {
+                        if sq.piece.is_none() {
+                            continue;
+                        }
+
+                        if sq.piece.unwrap().1 == board.to_move {
+                            continue;
+                        }
+                        let mut moves = MoveGenerator::gen_pseudo_moves(&sq, &cl_board);
+                        all_moves.append(&mut moves);
+                    }
+                }
+
+                for m in all_moves {
+                    if m.mov_type == MoveType::Capture {
+                        if cl_board.get_square(&m.to).piece.is_some() {
+                            if cl_board.get_square(&m.to).piece.unwrap().0 == Piece::King {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            } else {
+                cl_board.place_piece("f8", Some((Piece::King, Color::Black)));
+                cl_board.place_piece("g8", Some((Piece::King, Color::Black)));
+                let mut all_moves = Vec::new();
+                for row in cl_board.board {
+                    for sq in row {
+                        if sq.piece.is_none() {
+                            continue;
+                        }
+
+                        if sq.piece.unwrap().1 == board.to_move {
+                            continue;
+                        }
+                        let mut moves = MoveGenerator::gen_pseudo_moves(&sq, &cl_board);
+                        all_moves.append(&mut moves);
+                    }
+                }
+
+                for m in all_moves {
+                    if m.mov_type == MoveType::Capture {
+                        if cl_board.get_square(&m.to).piece.is_some() {
+                            if cl_board.get_square(&m.to).piece.unwrap().0 == Piece::King {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if mov.mov_type == MoveType::CastleQueenSide {
+            let mut cl_board = board.clone();
+            if board.to_move == Color::White {
+                cl_board.place_piece("d1", Some((Piece::King, Color::White)));
+                cl_board.place_piece("c1", Some((Piece::King, Color::White)));
+                let mut all_moves = Vec::new();
+                for row in cl_board.board {
+                    for sq in row {
+                        if sq.piece.is_none() {
+                            continue;
+                        }
+
+                        if sq.piece.unwrap().1 == board.to_move {
+                            continue;
+                        }
+                        let mut moves = MoveGenerator::gen_pseudo_moves(&sq, &cl_board);
+                        all_moves.append(&mut moves);
+                    }
+                }
+
+                for m in all_moves {
+                    if m.mov_type == MoveType::Capture {
+                        if cl_board.get_square(&m.to).piece.is_some() {
+                            if cl_board.get_square(&m.to).piece.unwrap().0 == Piece::King {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            } else {
+                cl_board.place_piece("d8", Some((Piece::King, Color::Black)));
+                cl_board.place_piece("c8", Some((Piece::King, Color::Black)));
+                let mut all_moves = Vec::new();
+                for row in cl_board.board {
+                    for sq in row {
+                        if sq.piece.is_none() {
+                            continue;
+                        }
+
+                        if sq.piece.unwrap().1 == board.to_move {
+                            continue;
+                        }
+                        let mut moves = MoveGenerator::gen_pseudo_moves(&sq, &cl_board);
+                        all_moves.append(&mut moves);
+                    }
+                }
+
+                for m in all_moves {
+                    if m.mov_type == MoveType::Capture {
+                        if cl_board.get_square(&m.to).piece.is_some() {
+                            if cl_board.get_square(&m.to).piece.unwrap().0 == Piece::King {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return true;
     }
 

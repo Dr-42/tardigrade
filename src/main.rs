@@ -1,17 +1,16 @@
 use tardigrade::{analyzer::Evaluator, board::Board};
 fn main() {
     let board =
-        Board::from_fen("r3k2r/p1ppqpb1/bnN1pnp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 1 1");
+        Board::from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 
     board.print();
-    let _res = Evaluator::perft(&board, 1, true);
-
-    /*
 
     for i in 0..4 {
-        let _res = Evaluator::perft(&board, i, true);
+        let _res = Evaluator::perft(&board, i, false);
         println!("depth: {}, {:?}", i, _res);
     }
+    /*
+    let _res = Evaluator::perft(&board, 1, true);
     let mvs = MoveGenerator::gen_legal_moves(&board);
     for mv in mvs {
         mv.print();
