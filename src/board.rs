@@ -233,6 +233,7 @@ impl Board {
 
     pub fn place_piece(&mut self, square: &str, piece: Option<(Piece, Color)>) {
         let indices = square.to_board_indices();
+        let indices = (indices.1, indices.0);
         self.set_piece(indices, piece);
     }
 
@@ -243,6 +244,42 @@ impl Board {
             return;
         }
         */
+
+        if mov.mov_type == MoveType::CastleKingSide || mov.mov_type == MoveType::CastleQueenSide {
+            if self.to_move == Color::White {
+                self.white_king_side_castle = false;
+                self.white_queen_side_castle = false;
+            } else {
+                self.black_king_side_castle = false;
+                self.black_queen_side_castle = false;
+            }
+        }
+
+        if self.get_square(&mov.from).piece.unwrap().0 == Piece::King {
+            if self.to_move == Color::White {
+                self.white_king_side_castle = false;
+                self.white_queen_side_castle = false;
+            } else {
+                self.black_king_side_castle = false;
+                self.black_queen_side_castle = false;
+            }
+        }
+
+        if self.get_square(&mov.from).piece.unwrap().0 == Piece::Rook {
+            if self.to_move == Color::White {
+                if &mov.from == "a1" {
+                    self.white_queen_side_castle = false;
+                } else {
+                    self.white_king_side_castle = false;
+                }
+            } else {
+                if &mov.from == "a8" {
+                    self.black_queen_side_castle = false;
+                } else {
+                    self.black_king_side_castle = false;
+                }
+            }
+        }
 
         let (from, to) = mov.get_indices();
         if mov.mov_type == MoveType::EnPassant {
@@ -264,8 +301,77 @@ impl Board {
         } else {
             self.en_passant_square = None;
         }
+        if mov.mov_type == MoveType::CastleKingSide {
+            if self.to_move == Color::White {
+                if self.get_square("f1").piece.is_none()
+                    && self.get_square("g1").piece.is_none()
+                    && self.get_square("h1").piece.is_some()
+                    && self.get_square("h1").piece.unwrap().0 == Piece::Rook
+                    && self.get_square("h1").piece.unwrap().1 == Color::White
+                {
+                    self.place_piece("f1", Some((Piece::Rook, Color::White)));
+                    self.place_piece("h1", None);
+                }
+            } else {
+                if self.get_square("f8").piece.is_none()
+                    && self.get_square("g8").piece.is_none()
+                    && self.get_square("h8").piece.is_some()
+                    && self.get_square("h8").piece.unwrap().0 == Piece::Rook
+                    && self.get_square("h8").piece.unwrap().1 == Color::Black
+                {
+                    self.place_piece("f8", Some((Piece::Rook, Color::Black)));
+                    self.place_piece("h8", None);
+                }
+            }
+        }
+
+        if mov.mov_type == MoveType::CastleQueenSide {
+            if self.to_move == Color::White {
+                if self.get_square("d1").piece.is_none()
+                    && self.get_square("c1").piece.is_none()
+                    && self.get_square("b1").piece.is_none()
+                    && self.get_square("a1").piece.is_some()
+                    && self.get_square("a1").piece.unwrap().0 == Piece::Rook
+                    && self.get_square("a1").piece.unwrap().1 == Color::White
+                {
+                    self.place_piece("d1", Some((Piece::Rook, Color::White)));
+                    self.place_piece("a1", None);
+                }
+            } else {
+                if self.get_square("d8").piece.is_none()
+                    && self.get_square("c8").piece.is_none()
+                    && self.get_square("b8").piece.is_none()
+                    && self.get_square("a8").piece.is_some()
+                    && self.get_square("a8").piece.unwrap().0 == Piece::Rook
+                    && self.get_square("a8").piece.unwrap().1 == Color::Black
+                {
+                    self.place_piece("d8", Some((Piece::Rook, Color::Black)));
+                    self.place_piece("a8", None);
+                }
+            }
+        }
         self.set_piece(to, self.get_square(&mov.from).piece);
         self.set_piece(from, None);
+
+        if mov.mov_type == MoveType::Promotion || mov.mov_type == MoveType::PromotionCapture {
+            self.set_piece(to, Some((mov.promotion.unwrap(), self.to_move)));
+        }
+
+        if mov.mov_type == MoveType::Capture || mov.mov_type == MoveType::EnPassant {
+            self.halfmove_clock = 0;
+        } else {
+            self.halfmove_clock += 1;
+        }
+
+        if self.to_move == Color::Black {
+            self.fullmove_number += 1;
+        }
+
+        if self.to_move == Color::White {
+            self.to_move = Color::Black;
+        } else {
+            self.to_move = Color::White;
+        }
     }
 
     pub fn get_square(&self, square: &str) -> Square {
