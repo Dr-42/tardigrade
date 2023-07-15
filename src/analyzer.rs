@@ -403,7 +403,7 @@ impl MoveGenerator {
             }
             if board.black_queen_side_castle {
                 let mut move_to = square.clone();
-                move_to.x = 6;
+                move_to.x = 2;
 
                 if board.get_square("b8").piece.is_none()
                     && board.get_square("c8").piece.is_none()
